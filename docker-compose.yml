@@ -1,0 +1,72 @@
+version: "3"
+services:
+  redis-compose:
+    image: redis:6.2-alpine
+    container_name: redis_6.2-alpine
+    command: redis-server --appendonly yes --loglevel warning
+    hostname: redis-compose
+    ports:
+      - "6379:6379"
+    networks:
+      - go-redis-stream
+  redis-commander-go:
+    container_name: redis-commander-web-go
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis-compose:6379
+    ports:
+      - "8081:8081"
+    networks:
+      - go-redis-stream
+
+  consumer_one:
+    container_name: go-consumer-one
+    build: '.'
+    environment:
+      - REDIS_HOST=redis-compose
+      - STREAM=events
+      - GROUP=GroupOne
+    depends_on:
+      - redis-compose
+    networks:
+      - go-redis-stream
+
+  consumer_two:
+    container_name: go-consumer-two
+    build: '.'
+    environment:
+      - REDIS_HOST=redis-compose
+      - STREAM=events
+      - GROUP=GroupOne
+    depends_on:
+      - redis-compose
+    networks:
+      - go-redis-stream
+
+  consumer_three:
+    container_name: go-consumer-three
+    build: '.'
+    environment:
+      - REDIS_HOST=redis-compose
+      - STREAM=events
+      - GROUP=GroupTwo
+    depends_on:
+      - redis-compose
+    networks:
+      - go-redis-stream
+
+  consumer_four:
+    container_name: go-consumer-four
+    build: '.'
+    environment:
+      - REDIS_HOST=redis-compose
+      - STREAM=events
+      - GROUP=GroupTwo
+    depends_on:
+      - redis-compose
+    networks:
+      - go-redis-stream
+networks:
+  go-redis-stream:
+    driver: bridge
